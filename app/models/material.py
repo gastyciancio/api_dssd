@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, Text, Float, null
-from db import db
+from app.db import db
 
 class Material(db.Model):
     __tablename__="material"
@@ -11,3 +11,6 @@ class Material(db.Model):
             'id': self.id,
             'name': self.name,
         }
+    @classmethod
+    def get_material(cls):
+        return Material.query.all()

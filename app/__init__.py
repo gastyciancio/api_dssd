@@ -1,42 +1,46 @@
-from flask import Flask
-from db import init_app
-#Config
-from config import config
 from os import environ
-from dotenv import load_dotenv
-#Models
+from flask import Flask, render_template, session
+from config import config
+from app import db
+from flask_cors import CORS
 from app.models.supplier import Supplier
 from app.models.material import Material
 from app.models.supplier_material import SupplierMaterial
-#Routes
-from app.controllers.supplier import supplier
+from app.resources.supplier import supplier
 
 
-load_dotenv()
-
-def create_app(environment = "development"):
-    
+def create_app(environment="development"):
+    # Configuración inicial de la app
     app = Flask(__name__)
+    CORS(app)
 
+    # Carga de la configuración
     env = environ.get("FLASK_ENV", environment)
     app.config.from_object(config[env])
 
-    init_app(app)
+    # Server Side session
+    app.config["SESSION_TYPE"] = "filesystem"
+    
 
-    @app.route("/")
-    def home():
-        suppliers = Supplier.query.all()
-        
-        for supplier in suppliers:
-            print("Nombre del supplier: " + supplier.name, flush=True)
-            for sup_mat in supplier.materials:
-                print("Material: " + sup_mat.material.name, flush=True)
-                print("Precio: " + str(sup_mat.price_per_kg), flush=True)
-            print("---------------", flush=True)
-        
-        return "Home!"
+    # Configure db
+    db.init_app(app)
 
-    #Blueprints
+    # Funciones que se exportan al contexto de Jinja2
+    #app.jinja_env.globals.update(is_authenticated=helper_auth.authenticated)
+    # Funciones que se exportan al contexto de Jinja2
+    
+    # Rutas de Consultas
+
     app.register_blueprint(supplier)
 
+    # Autenticación
+
+    # Ruta para el Home (usando decorator)
+    @app.route("/")
+    def home():
+        # No dar bola a esto, es para cue se cree las tablas cuando inicias por primera vez todo
+        SupplierMaterial.get_supllier_material()
+        Material.get_material()
+        Supplier.get_suppliers('',"14/10/2022") 
+        return render_template("home.html")  
     return app

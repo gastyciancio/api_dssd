@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, Text
-from db import db
+from app.db import db
 
 class Maker(db.Model):
     __tablename__="maker"
