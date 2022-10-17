@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, Text
+from sqlalchemy import Column, Integer, Text
 from app.db import db
 
 class Maker(db.Model):

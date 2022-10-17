@@ -1,8 +1,7 @@
-from sqlalchemy import Column, Float, ForeignKey, Integer, Text
+from sqlalchemy import Column, Float, ForeignKey, Integer
 from sqlalchemy.orm import relationship
-from app.models.material import Material
 from app.db import db
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta
 
 class SupplierMaterial(db.Model):
     __tablename__ = "supplier_material"

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, Text, Float, null
+from sqlalchemy import Column, Integer, Text
 from app.db import db
 
 class Material(db.Model):

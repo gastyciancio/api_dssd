@@ -13,6 +13,6 @@ def index():
 def by_data():
     consulta = request.json
 
-    suppliers = Supplier.get_suppliers(consulta["materiales"], consulta['fecha'])
+    suppliers = Supplier.get_suppliers(consulta["materiales"])
     suppliers = [ supplier.json() for supplier in suppliers ]
     return jsonify({'suppliers': suppliers })
