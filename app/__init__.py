@@ -41,6 +41,6 @@ def create_app(environment="development"):
         # No dar bola a esto, es para cue se cree las tablas cuando inicias por primera vez todo
         SupplierMaterial.get_supllier_material()
         Material.get_material()
-        Supplier.get_suppliers('') 
+        Supplier.get_suppliers('',None,None) 
         return render_template("home.html")  
     return app
