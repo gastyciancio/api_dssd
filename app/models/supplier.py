@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, Text
 from sqlalchemy.orm import relationship
 from app.db import db
 from datetime import date, timedelta, datetime
+from app.models.supplier_material import SupplierMaterial
 
 class Supplier(db.Model):
     __tablename__="supplier"
@@ -56,6 +57,31 @@ class Supplier(db.Model):
                 lista_suppliers.append(supplier_with_only_materials_asked)
         return lista_suppliers
     
+    @classmethod
+    def reserve_suppliers(cls, suppliers):
+
+        messages = []
+        for supplier in suppliers:
+            for material in supplier['materials']:
+                suppliermaterial_in_bd = SupplierMaterial.query.get((supplier['id'], material['id']))
+                if (suppliermaterial_in_bd.amount >= material['amount']):
+                    suppliermaterial_in_bd.amount = suppliermaterial_in_bd.amount - material['amount']
+                    db.session.commit()
+                    messages.append(
+                        {
+                            "message":"Reserva exitosa",
+                            "supplier_id": supplier['id'], 
+                            'material_id': material['id']
+                        })
+                else:
+                    messages.append(
+                        {
+                            "message":"Proveedor sin stock",
+                            "supplier_id": supplier['id'], 
+                            'material_id':material['id']
+                        })
+        return messages
+
     @classmethod
     def getAll(cls):
         return Supplier.query.all()

@@ -38,3 +38,17 @@ def by_data():
             materiales_sin_supplier.append(material)
 
     return jsonify({'suppliers': suppliers, 'metadata':{'materiales_sin_proveedor': materiales_sin_supplier} })
+
+@supplier.post("/reserve")
+def reserve():
+    consulta = request.json
+    suppliers_consulta = consulta.get("suppliers")
+   
+
+    if suppliers_consulta == None:
+        return jsonify({'Error': 'Suppliers required' })
+
+
+    messages = Supplier.reserve_suppliers(suppliers_consulta)
+
+    return jsonify({'response': messages})
