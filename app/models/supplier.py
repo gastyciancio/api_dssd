@@ -15,7 +15,7 @@ class Supplier(db.Model):
 
         lista_suppliers = []
         nombres_materiales = []
-        fecha_deseada = datetime.strptime(fecha_deseada,"%d/%m/%Y").date()
+        #fecha_deseada = datetime.strptime(fecha_deseada,"%d/%m/%Y").date()
 
         for material in materiales:
             nombres_materiales.append(material['name'].lower())

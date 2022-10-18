@@ -7,6 +7,9 @@ from app.models.supplier import Supplier
 from app.models.material import Material
 from app.models.supplier_material import SupplierMaterial
 from app.resources.supplier import supplier
+from app.resources.auth import auth
+#JWT
+from flask_jwt_extended import JWTManager
 
 
 def create_app(environment="development"):
@@ -20,22 +23,18 @@ def create_app(environment="development"):
 
     # Server Side session
     app.config["SESSION_TYPE"] = "filesystem"
-    
 
     # Configure db
     db.init_app(app)
 
-    # Funciones que se exportan al contexto de Jinja2
-    #app.jinja_env.globals.update(is_authenticated=helper_auth.authenticated)
-    # Funciones que se exportan al contexto de Jinja2
-    
-    # Rutas de Consultas
+    #Jwt
+    app.config["JWT_SECRET_KEY"] = "wvf7QQwBHAj0u6BvDXhV0NXySu7f9R3qvvoAmh9zxLcfiLQSAsSjqm18ypRD29UN2fDpojt_jwdyToYzmiDull00N7lEasOl_EXaBiwwJNt"  # Change this!
+    jwt = JWTManager(app)
 
+    # Rutas
     app.register_blueprint(supplier)
+    app.register_blueprint(auth)
 
-    # Autenticación
-
-    # Ruta para el Home (usando decorator)
     @app.route("/")
     def home():
         # No dar bola a esto, es para cue se cree las tablas cuando inicias por primera vez todo
