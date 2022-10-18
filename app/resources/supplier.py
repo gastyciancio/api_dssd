@@ -6,12 +6,14 @@ from flask_jwt_extended import jwt_required
 supplier = Blueprint("suppliers", __name__, url_prefix="/suppliers")
 
 @supplier.get("/index")
+@jwt_required()  ###Decorator para proteger la ruta
 def index():
     suppliers = Supplier.getAll()
     suppliers = [ supplier.json() for supplier in suppliers ]
     return jsonify({'suppliers': suppliers })
 
 @supplier.get("/by_data")
+@jwt_required()  ###Decorator para proteger la ruta
 def by_data():
     consulta = request.json
     materiales = consulta.get("materiales")
@@ -42,6 +44,7 @@ def by_data():
     return jsonify({'suppliers': suppliers, 'metadata':{'materiales_sin_proveedor': materiales_sin_supplier} })
 
 @supplier.post("/reserve")
+@jwt_required()  ###Decorator para proteger la ruta
 def reserve():
     consulta = request.json
     suppliers_consulta = consulta.get("suppliers")
@@ -54,16 +57,3 @@ def reserve():
     messages = Supplier.reserve_suppliers(suppliers_consulta)
 
     return jsonify({'response': messages})
-
-"""
-Endpoint para testear el jwt
-GET http://localhost:5000/suppliers/protected-test-jwt
-Headers: {
-    Authorization: Bearer ${jwt sacado del auth, sin comillas}
-}
-"""
-@supplier.get('/protected-test-jwt')
-@jwt_required()  ###Decorator para proteger la ruta
-def test():
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
