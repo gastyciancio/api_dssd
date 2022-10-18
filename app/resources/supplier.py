@@ -17,10 +17,10 @@ def by_data():
     dias_extra = consulta.get("dias_extra")
 
     if materiales == None:
-        return jsonify({'Error': 'Materiales required' })
+        return jsonify({'Error': 'Materials required' })
 
 
-    suppliers = Supplier.get_suppliers(materiales, filtro_precio,dias_extra)
+    suppliers = Supplier.get_suppliers(materiales, filtro_precio, dias_extra)
     suppliers = [ supplier.json() for supplier in suppliers ]
 
     # Retorno en un arreglo los materiales que no tengan un proveedor asi tenemos registro de los mismos

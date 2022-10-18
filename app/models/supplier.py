@@ -47,7 +47,7 @@ class Supplier(db.Model):
                     if (filtro_precio == None):
                         lista_materiales.append(supplier_material)
                     else:
-                        if (filtro_precio > supplier_material.price_perk_kg):
+                        if (filtro_precio >= supplier_material.price_per_kg):
                             lista_materiales.append(supplier_material)
                     
             # SI EXISTE AL MENOS UN MATERIAL SIGINIFICA QUE EL PROVEEDOR ES UTIL PARA LA BUSQUEDA, SE LO AGREGA AL LISTADO DE PROVEEDORES SOLO CON LOS MATERIALES QUE SIRVEN
