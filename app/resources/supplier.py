@@ -12,7 +12,14 @@ def index():
 @supplier.get("/by_data")
 def by_data():
     consulta = request.json
+    materiales = consulta.get("materiales")
+    filtro_precio = consulta.get("filtro_precio")
+    dias_extra = consulta.get("dias_extra")
 
-    suppliers = Supplier.get_suppliers(consulta["materiales"], consulta["filtro_precio"],consulta["dias_extra"])
+    if materiales == None:
+        return jsonify({'Error': 'Materiales required' })
+
+
+    suppliers = Supplier.get_suppliers(materiales, filtro_precio,dias_extra)
     suppliers = [ supplier.json() for supplier in suppliers ]
     return jsonify({'suppliers': suppliers })
