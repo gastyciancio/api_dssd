@@ -64,6 +64,32 @@ class Maker(db.Model):
         
         return lista_makers
 
+    @classmethod
+    def reserve_makers(cls, makers):
+
+        messages = []
+        for maker in makers:
+            for material in maker['materials']:
+                makermaterial_in_bd = MakerMaterial.query.get((maker['id'], material['id']))
+                if (makermaterial_in_bd.max_amount >= material['amount']):
+                    makermaterial_in_bd.max_amount = makermaterial_in_bd.max_amount - material['amount']
+                    db.session.commit()
+                    messages.append(
+                        {
+                            "message":"Reserva exitosa",
+                            "maker_id": maker['id'], 
+                            'material_id': material['id']
+                        })
+                else:
+                    messages.append(
+                        {
+                            "message":"Fabricante sin stock",
+                            "maker_id": maker['id'], 
+                            'material_id':material['id']
+                        })
+        return messages
+
+
     def json(self):
         materials = [ material.json() for material in self.materials ]
 
