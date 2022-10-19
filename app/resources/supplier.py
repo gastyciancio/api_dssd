@@ -12,7 +12,7 @@ def index():
     suppliers = [ supplier.json() for supplier in suppliers ]
     return jsonify({'suppliers': suppliers })
 
-@supplier.get("/by_data")
+@supplier.post("/by_data")
 @jwt_required()  ###Decorator para proteger la ruta
 def by_data():
     consulta = request.json

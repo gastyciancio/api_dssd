@@ -24,7 +24,7 @@ def login():
         if not username:
             return jsonify({"msg": "Missing username"}), 400
         if not password:
-            return jsonify({"msg": "Missing username"}), 400
+            return jsonify({"msg": "Missing password"}), 400
 
         if(username != 'walter.bates' or password != 'admin123'):
             return jsonify({"msg": "Bad username or password"}), 401
