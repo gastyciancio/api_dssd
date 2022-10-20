@@ -24,7 +24,21 @@ def by_data():
     makers = Maker.get_makers_filtered(materiales, filtro_precio, dias_extra)
     makers = [ maker.json() for maker in makers ]
 
-    return jsonify({'makers': makers})
+   # Retorno en un arreglo los materiales que no tengan un proveedor asi tenemos registro de los mismos
+    materiales_sin_maker = []
+    for material in materiales:
+        tiene_maker= False
+        for maker in makers:
+            for material_of_maker in maker['materials']:
+                if (tiene_maker == True):
+                    break
+                if (material_of_maker['name'].lower() == material['name'].lower()):
+                    tiene_maker = True
+                    break
+        if (tiene_maker == False):
+            materiales_sin_maker.append(material)
+
+    return jsonify({'makers': makers, 'metadata':{'materiales_sin_fabricante': materiales_sin_maker} })
 
 @maker.post("/reserve")
 @jwt_required()  ###Decorator para proteger la ruta

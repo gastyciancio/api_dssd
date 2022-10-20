@@ -1,4 +1,4 @@
-# fly.toml file generated for apidssd on 2022-10-19T19:42:35-03:00
+# fly.toml file generated for apidssd on 2022-10-19T21:55:26-03:00
 
 app = "apidssd"
 kill_signal = "SIGINT"

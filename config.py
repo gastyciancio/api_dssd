@@ -21,7 +21,7 @@ class ProductionConfig(Config):
 
     DB_HOST = environ.get("DB_HOST", "apidssd-db.internal")
     DB_USER = environ.get("DB_USER", "postgres")
-    DB_PASS = environ.get("DB_PASS", "bc2c686a3f5ec12b16b89dff16c474732eb3b983e78e5281")
+    DB_PASS = environ.get("DB_PASS", "296e08d96f770ae1a692e5ef6d0582a470de4aba09cfce0e")
     DB_NAME = environ.get("DB_NAME", "apidssd_db")
     SQLALCHEMY_DATABASE_URI= (
         f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:5432/{DB_NAME}"
