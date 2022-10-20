@@ -95,7 +95,7 @@ class Maker(db.Model):
                         cantidad_pedidos_superan_maximo = cantidad_pedidos_superan_maximo + 1
                         messages.append(
                             {
-                                "message":"El pedido del cliente supera la cantidad maxima que acepta el fabricante",
+                                "message":"El pedido del cliente supera la cantidad maxima que acepta el fabricante: " + str(makermaterial_in_bd.max_amount),
                                 "maker_id": maker['id'], 
                                 'material_id':material['id']
                             })
