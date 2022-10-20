@@ -1,0 +1,618 @@
+openapi: 3.0.3
+info:
+  title: Api Proveedores
+  version: 1.0.0
+tags:
+  - name: Proveedores
+    description: Endpoints relacionados a proveedores 
+  - name: Fabricantes
+    description:  Endpoints relacionados a fabricantes
+  - name: Login
+    description: Endpoints relacionados a la autenticacion JWT
+paths:
+  /suppliers/index:
+    get:
+      tags:
+        - Proveedores
+      summary: Listar todos los proveedores que hay en la nube
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY2NjIzMjk2MiwianRpIjoiMGQ2ZjI4YzEtNjFlYy00Yzg0LTgxMTYtMmFiNjNjNTJlMTcyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IndhbHRlci5iYXRlcyIsIm5iZiI6MTY2NjIzMjk2MiwiZXhwIjoxNjY2MjMzNTYyfQ._VLeVodl3lLCIatH7GAH6F6HykPEZk1YSAKOxZjvq7g'
+          required: true
+      description: >
+        Se explicara que significa cada campo de la respuesta:
+          - Suppliers = arreglo con los proveedores. Por cada supplier tenemos: 
+            - id = id del proveedor.
+            - materials = arreglo de materiales que posee el proveedor. Por cada material tenemos:
+              - date_deliver = fecha que puede entrega el material.
+              - id = identificador del material. 
+              - name = nombre del material. 
+              - price_per_kg = precio del material por kilo.
+            - name = nombre del proveedor"
+      responses:
+        '200':
+          description: Operacion exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Suppliers'          
+        '401':
+          description: "No autenticado. La clave msg contiene el detalle del error en particular, que pueden ser por falta del header de autenticacion o porque el token expiro" 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: 'Missing Authorization Header'
+  /suppliers/by_data:
+    post:
+      tags:
+        - Proveedores
+      summary: Listar todos los proveedores disponibles
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY2NjIzMjk2MiwianRpIjoiMGQ2ZjI4YzEtNjFlYy00Yzg0LTgxMTYtMmFiNjNjNTJlMTcyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IndhbHRlci5iYXRlcyIsIm5iZiI6MTY2NjIzMjk2MiwiZXhwIjoxNjY2MjMzNTYyfQ._VLeVodl3lLCIatH7GAH6F6HykPEZk1YSAKOxZjvq7g'
+          required: true
+      description: > 
+        Se listan los proveedores que pueden satisfacer los requerimientos del cliente, tales sean la fecha, el material, la cantidad y opcionalmente el precio maximo tolerado.
+        Se explicara que significa cada campo de la request:
+          - materiales = arreglo con los materiales por los que se desea buscar proveedores. Por cada material tenemos: 
+            - amount = cantidad requerida.
+            - date_required = fecha maxima que el cliente acepta que un proveedor le tarde en dar el material
+            - name = nombre del material
+          - filtro_precio = cantidad maxima que el cliente desea pagar para cada material
+          - dias_extras = cantidad de dias extras que el cliente aceptar que en un proveedor le tarde en dar el material. Esto sirve para renegociar en caso de que el cliente quiera ver mas proveedores
+
+        Se explicara que significa cada campo de la respuesta:
+          - metadata = Datos de utilidad aparte de la respuesta necesaria. DEntro tenemos:
+              - materiales_sin _proveedor = arreglo con todos los materiales que no se consiguieron un proveedor con los requerimientos del cliente. Por cada material tenemos:
+                - amount = cantidad requerida.
+                - date_required = fecha maxima que el cliente acepta que un proveedor le tarde en dar el material
+                - name = nombre del material
+              - date_required = fecha maxima que el cliente acepta que un proveedor le tarde en dar el material
+              - name = nombre del material
+          - suppliers = arreglo con cada proveedor con los materiales que puede ofrecerle al cliente de acuerdo con sus requerimientos. Por cada supplier tenemos:
+              - id = id del proveedor.
+                - materials = arreglo de materiales que posee el proveedor. Por cada material tenemos:
+                  - date_deliver = fecha que puede entrega el material.
+                  - id = identificador del material. 
+                  - name = nombre del material. 
+                  - price_per_kg = precio del material por kilo.
+                - name = nombre del proveedor"
+      requestBody:
+        description: 'Parametros para la busqueda de proveedores determinados. Filtro_precio y dias_extras no es obligatorio'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestProveedoresByData'
+      responses:
+        '200':
+          description: Operacion exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseProveedoresByData' 
+        '400':
+          description: "Bad request, se debe a que no se mandaron los materiales que se desean para consultar proveedores"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Error:
+                    type: string
+                    example: 'Materials required'
+        '401':
+          description: "No autenticado. La clave msg contiene el detalle del error en particular, que pueden ser por falta del header de autenticacion o porque el token expiro" 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: 'Missing Authorization Header || token has expired'
+  /suppliers/reserve:
+    post:
+      tags:
+        - Proveedores
+      summary: Reservar los proveedores elegidos
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY2NjIzMjk2MiwianRpIjoiMGQ2ZjI4YzEtNjFlYy00Yzg0LTgxMTYtMmFiNjNjNTJlMTcyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IndhbHRlci5iYXRlcyIsIm5iZiI6MTY2NjIzMjk2MiwiZXhwIjoxNjY2MjMzNTYyfQ._VLeVodl3lLCIatH7GAH6F6HykPEZk1YSAKOxZjvq7g'
+          required: true
+      description: >
+        Se reserva la cantidad de materiales a los proveedores que el cliente eligio para la fecha solicitada.
+        
+        Se explicara cada campo de la request:
+          - suppliers = arreglo con los proveedores que se quieren reservar. Por cada supplier tenemos:
+            - id = identificador del proveedor
+            - materiales = arreglo con materiales que se quiere reservar para el proveedor. Por cada material tenemos:
+              - id = identificador del material
+              - amount = cantidad de material a reservar para el proveedor
+        
+        Se explicara cada campo de la respuesta:
+          - response = arreglo con notificaciones para cada reserva que se intento hacer para los materiales
+            - id = identificador del proveedor
+            - materiales = arreglo con materiales que se quiere reservar para el proveedor. Por cada material tenemos:
+              - id = identificador del material
+              - amount = cantidad de material a reservar para el proveedor
+      responses:
+        '200':
+          description: Operacion exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProveedoresReservados' 
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Error:
+                    type: string
+                    example: 'Suppliers required'
+        '401':
+          description: "No autenticado. La clave msg contiene el detalle del error en particular, que pueden ser por falta del header de autenticacion o porque el token expiro" 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: 'Missing Authorization Header || token has expired'
+  
+  /makers/index:
+    get:
+      tags:
+        - Fabricantes
+      summary: Listar todos los fabricantes que hay en la nube
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY2NjIzMjk2MiwianRpIjoiMGQ2ZjI4YzEtNjFlYy00Yzg0LTgxMTYtMmFiNjNjNTJlMTcyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IndhbHRlci5iYXRlcyIsIm5iZiI6MTY2NjIzMjk2MiwiZXhwIjoxNjY2MjMzNTYyfQ._VLeVodl3lLCIatH7GAH6F6HykPEZk1YSAKOxZjvq7g'
+          required: true
+      description: >
+        Se explicara que significa cada campo de la respuesta:
+          - makers = arreglo con los fabricantes. Por cada supplier tenemos: 
+            - id = id del fabricante.
+            - materials = arreglo de materiales que posee el fabricante. Por cada material tenemos:
+              - date_deliver = fecha que puede entrega el material.
+              - id = identificador del material. 
+              - name = nombre del material. 
+              - price_per_kg = precio del material por kilo.
+            - name = nombre del fabricante"
+      responses:
+        '200':
+          description: Operacion exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Makers'          
+        '401':
+          description: "No autenticado. La clave msg contiene el detalle del error en particular, que pueden ser por falta del header de autenticacion o porque el token expiro" 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: 'Missing Authorization Header'
+  /makers/by_data:
+    post:
+      tags:
+        - Fabricantes
+      summary: Listar todos los fabriccantes disponibles
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY2NjIzMjk2MiwianRpIjoiMGQ2ZjI4YzEtNjFlYy00Yzg0LTgxMTYtMmFiNjNjNTJlMTcyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IndhbHRlci5iYXRlcyIsIm5iZiI6MTY2NjIzMjk2MiwiZXhwIjoxNjY2MjMzNTYyfQ._VLeVodl3lLCIatH7GAH6F6HykPEZk1YSAKOxZjvq7g'
+          required: true
+      description: > 
+        Se listan los fabricantes que pueden satisfacer los requerimientos del cliente, tales sean la fecha, el material, la cantidad y opcionalmente el precio maximo tolerado.
+        Se explicara que significa cada campo de la request:
+          - materiales = arreglo con los materiales por los que se desea buscar fabricantes. Por cada material tenemos: 
+            - amount = cantidad requerida.
+            - date_required = fecha maxima que el cliente acepta que un fabricante le tarde en dar el material
+            - name = nombre del material
+          - filtro_precio = cantidad maxima que el cliente desea pagar para cada material
+          - dias_extras = cantidad de dias extras que el cliente aceptar que en un fabricante le tarde en dar el material. Esto sirve para renegociar en caso de que el cliente quiera ver mas fabricantes
+
+        Se explicara que significa cada campo de la respuesta:
+          - metadata = Datos de utilidad aparte de la respuesta necesaria. Dentro tenemos:
+              - materiales_sin_fabricante = arreglo con todos los materiales que no se consiguieron un fabricante con los requerimientos del cliente. Por cada material tenemos:
+                - amount = cantidad requerida.
+                - date_required = fecha maxima que el cliente acepta que un fabricante le tarde en dar el material
+                - name = nombre del material
+              - date_required = fecha maxima que el cliente acepta que un proveedor le tarde en dar el material
+              - name = nombre del material
+          - makers = arreglo con cada proveedor con los materiales que puede ofrecerle al cliente de acuerdo con sus requerimientos. Por cada maker tenemos:
+              - id = id del proveedor.
+                - materials = arreglo de materiales que posee el proveedor. Por cada material tenemos:
+                  - date_deliver = fecha que puede entrega el material.
+                  - id = identificador del material. 
+                  - name = nombre del material. 
+                  - price_per_kg = precio del material por kilo.
+                - name = nombre del proveedor"
+      requestBody:
+        description: 'Parametros para la busqueda de fabricantes determinados. Filtro_precio y dias_extras no es obligatorio'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestProveedoresByData'
+      responses:
+        '200':
+          description: Operacion exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseFabricantesByData' 
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Error:
+                    type: string
+                    example: 'Materials required'
+        '401':
+          description: "No autenticado. La clave msg contiene el detalle del error en particular, que pueden ser por falta del header de autenticacion o porque el token expiro" 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: 'Missing Authorization Header || token has expired'
+  /makers/reserve:
+    post:
+      tags:
+        - Fabricantes
+      summary: Reservar los fabricantes elegidos en la fecha
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY2NjIzMjk2MiwianRpIjoiMGQ2ZjI4YzEtNjFlYy00Yzg0LTgxMTYtMmFiNjNjNTJlMTcyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IndhbHRlci5iYXRlcyIsIm5iZiI6MTY2NjIzMjk2MiwiZXhwIjoxNjY2MjMzNTYyfQ._VLeVodl3lLCIatH7GAH6F6HykPEZk1YSAKOxZjvq7g'
+          required: true
+      description: > 
+        Se reserva a los fabricantes que el cliente eligio para la fecha solicitada.
+        
+        Se explicara cada campo de la request:
+          - suppliers = arreglo con los proveedores que se quieren reservar. Por cada supplier tenemos:
+            - id = identificador del proveedor
+            - materiales = arreglo con materiales que se quiere reservar para el proveedor. Por cada material tenemos:
+              - id = identificador del material
+              - amount = cantidad de material a reservar para el proveedor
+        
+        Se explicara cada campo de la respuesta:
+          - response = arreglo con notificaciones para cada reserva que se intento hacer para los fabricantes. En cada response tenemos:
+            - maker_id = identificador del fabricantes
+            - message = mensaje respecto a la reserva del fabricante para la fecha que el cliente quiere los materiales
+            - material_id = identificador del material
+      requestBody:
+        description: 'Parametros para la reserva de fabricantes elegidos'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestFabricantesReserve'
+      responses:
+        '200':
+          description: Operacion exitosa
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/FabricantesReservaResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Error:
+                    type: string
+                    example: 'Makers required'
+        '401':
+          description: "No autenticado. La clave msg contiene el detalle del error en particular, que pueden ser por falta del header de autenticacion o porque el token expiro" 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: 'Missing Authorization Header || token has expired'
+  
+  /login:
+    post:
+      tags:
+        - Login
+      summary: 'Autenticarse con el sistema. Usar datos que hay en el ejemplo (username walter.bates y password admin123)'
+      description: >
+        Endpoint utilizado para autenticar al cliente y darle un token de acceso a los demas endpoints de la API.
+        
+        Se explicara cada campo de la request:
+          - username = nombre de usuario del cliente
+          - password = contraseña del cliente
+        
+        Se explicara cada campo de la respuesta:
+          - access_token = Token que se necesitara en cada solicitud de los demas endpoints, va en el header
+      requestBody:
+        description: Parametros para la busqueda de proveedores determinados
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestLogin'
+      responses:
+        '200':
+          description: Operacion exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutenticacionExitosa' 
+        '400':
+          description: "No se mandaron los campos username o password"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Error:
+                    type: string
+                    example: 'Provide username and password in JSON format in the request body'
+        '401':
+          description: "No autenticado. La clave msg contiene el detalle del error en particular que indica que para los datos otorgados no se dio acceso." 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: 'Bad username or password'
+components:
+  schemas:
+    AutenticacionExitosa:
+        type: object
+        properties:
+            access_token:
+                  type: string
+                  example: "asdggstg46yadgagaetyyt6wytjehgfoiueqhgoiquyg8q7wgtyq78g8qghq8yug7hq8g"
+    ResponseProveedoresByData:
+        type: object
+        properties:
+            metadata:
+                  type: object
+                  properties:
+                    materiales_sin_proveedor:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          amount:
+                            type: integer
+                            example: 15
+                          date_required:
+                            type: string
+                            example: "17/12/2022"
+                          name:
+                            type: string
+                            example: 'Madera'
+            suppliers:
+              type: array
+              items:
+                $ref: '#/components/schemas/Supplier'  
+    RequestLogin:
+        type: object
+        properties:
+          username:
+            type: string
+            example: "walter.bates"
+          password:
+            type: string
+            example: admin123
+    RequestProveedoresByData:
+        type: object
+        properties:
+          materiales:
+            type: array
+            items:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                  example: 15
+                date_required:
+                  type: string
+                  example: "17/12/2022"
+                name:
+                  type: string
+                  example: 'Madera'
+          filtro_precio:
+            type: integer
+            example: 1000
+          dias_extras:
+            type: integer
+            example: 5
+        required:
+          - materiales
+    ProveedoresReservados:
+      type: object
+      properties:
+        response:
+          type: array
+          items:
+            type: object
+            properties:
+              material_id:
+                type: integer
+                example: 2
+              message:
+                type: string
+                description: dependiendo si el proveedor seguia con stock suficiente se informa reserva exitosa o proveedor sin stock
+                example: "Proveedor sin stock || reserva exitosa"
+              supplier_id:
+                type: integer
+                example: 3
+    Suppliers:
+      type: object
+      properties:
+        suppliers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Supplier'
+    Supplier:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        materials:
+          type: array
+          items:
+            type: object
+            properties:
+              date_deliver:
+                type: string
+                example: "17/12/2022"
+              id:
+                type: integer
+                example: 1
+              name:
+                type: string
+                example: vidrio
+              price_per_kg:
+                type: number
+                example: 250.0
+        name:
+          type: string
+          example: "pepe"
+    Makers:
+      type: object
+      properties:
+        makers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Maker'
+    Maker:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        materials:
+          type: array
+          items:
+            type: object
+            properties:
+              date_deliver:
+                type: string
+                example: "17/12/2022"
+              id:
+                type: integer
+                example: 1
+              name:
+                type: string
+                example: vidrio
+              price_per_kg:
+                type: number
+                example: 250.0
+        name:
+          type: string
+          example: "pepe"
+    ResponseFabricantesByData:
+      type: object
+      properties:
+            metadata:
+                  type: object
+                  properties:
+                    materiales_sin_fabricante:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          amount:
+                            type: integer
+                            example: 15
+                          date_required:
+                            type: string
+                            example: "17/12/2022"
+                          name:
+                            type: string
+                            example: 'Madera'
+            makers:
+              type: array
+              items:
+                $ref: '#/components/schemas/Maker'  
+    FabricantesReservaResponse:
+      type: object
+      properties:
+        response:
+          type: array
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+                example: 'El fabricante reservo el espacio || El fabricante esta ocupado hasta la fecha 20/12/2022 || El pedido del cliente supera la cantidad maxima que acepta el fabricante'
+              maker_id:
+                type: integer
+                example: 1
+              material_id:
+                type: integer
+                example: 2
+    RequestFabricantesReserve:
+        type: object
+        properties:
+          makers:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 15
+                materials:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 2
+                      amount:
+                        type: integer
+                        example: 100
+                date_deliver:
+                  type: string
+                  example: '26/10/2022'
+        required:
+          - makers
+              
+                
