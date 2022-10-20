@@ -8,6 +8,7 @@ from app.models.material import Material
 from app.models.supplier_material import SupplierMaterial
 from app.models.maker import Maker
 from app.models.maker_material import MakerMaterial
+from app.models.reserve_maker import ReserveMaker
 from app.resources.supplier import supplier
 from app.resources.auth import auth
 from app.resources.maker import maker
@@ -15,7 +16,7 @@ from datetime import timedelta
 #JWT
 from flask_jwt_extended import JWTManager
 
-def create_app(environment="development"):
+def create_app(environment="production"):
     # Configuración inicial de la app
     app = Flask(__name__)
     CORS(app)
@@ -48,5 +49,6 @@ def create_app(environment="development"):
         Supplier.get_suppliers('',None,None)
         Maker.get_makers()
         MakerMaterial.get_maker_material()
+        ReserveMaker.get_reserve_makers()
         return render_template("home.html")  
     return app

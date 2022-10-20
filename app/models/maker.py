@@ -3,6 +3,7 @@ from app.db import db
 from sqlalchemy.orm import relationship
 from app.models.maker_material import MakerMaterial
 from datetime import date, timedelta, datetime
+from app.models.reserve_maker import ReserveMaker
 
 class Maker(db.Model):
     __tablename__="maker"
@@ -68,25 +69,45 @@ class Maker(db.Model):
     def reserve_makers(cls, makers):
 
         messages = []
+        reserved_makers = ReserveMaker.get_reserve_makers()
         for maker in makers:
-            for material in maker['materials']:
-                makermaterial_in_bd = MakerMaterial.query.get((maker['id'], material['id']))
-                if (makermaterial_in_bd.max_amount >= material['amount']):
-                    makermaterial_in_bd.max_amount = makermaterial_in_bd.max_amount - material['amount']
+            
+            reservado = False
+            fecha = None
+            for reserved_maker in reserved_makers:
+                if (reserved_maker.maker_id == maker['id']) and (datetime.strptime(reserved_maker.date_reserved,"%d/%m/%Y").date() >= datetime.strptime(maker['date_deliver'],"%d/%m/%Y").date()):
+                    reservado = True
+                    fecha = reserved_maker.date_reserved
+                    break
+
+            if (reservado == True):
+                messages.append(
+                    {
+                        "message":'El fabricante esta ocupado hasta la fecha: ' + fecha,
+                        "maker_id": maker['id']
+                    })
+
+            else:
+                cantidad_pedidos_superan_maximo = 0
+                for material in maker['materials']:
+                    makermaterial_in_bd = MakerMaterial.query.get((maker['id'], material['id']))
+                    if (makermaterial_in_bd.max_amount < material['amount']):
+                        cantidad_pedidos_superan_maximo = cantidad_pedidos_superan_maximo + 1
+                        messages.append(
+                            {
+                                "message":"El pedido del cliente supera la cantidad maxima que acepta el fabricante: " + str(makermaterial_in_bd.max_amount),
+                                "maker_id": maker['id'], 
+                                'material_id':material['id']
+                            })
+                if (cantidad_pedidos_superan_maximo == 0):
+                    new_reserve = ReserveMaker(maker['id'],maker['date_deliver'])
+                    db.session.add(new_reserve)
                     db.session.commit()
                     messages.append(
-                        {
-                            "message":"Reserva exitosa",
-                            "maker_id": maker['id'], 
-                            'material_id': material['id']
-                        })
-                else:
-                    messages.append(
-                        {
-                            "message":"Fabricante sin stock",
-                            "maker_id": maker['id'], 
-                            'material_id':material['id']
-                        })
+                            {
+                                "message":"El fabricante reservo el espacio",
+                                "maker_id": maker['id']
+                            })
         return messages
 
 
