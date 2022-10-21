@@ -37,7 +37,7 @@ class Maker(db.Model):
             for maker_material in maker.materials:
 
                 # NOS FIJAMOS QUE EL MATERIAL ESTE EN EL LISTADO SOLICITADO, QUE LA CANTIDAD PEDIDA SEA MENOR IGUAL AL STOCK ACTUAL DEL MATERIAL Y QUE LA FECHA QUE ENTREGA EL PROVEEDOR SEA MENOR IGUAL A LA QUE EL CLIENTE DESEA
-                if (amount_glasses <= maker.max_amount_glasses) and (date_deliver <= fecha_deseada):
+                if ((maker_material.material.name).lower() in nombres_materiales) and (amount_glasses <= maker.max_amount_glasses) and (date_deliver <= fecha_deseada):
 
                     # FILTRO POR PRECIO, PARAMETRO OPCIONAL DE LA RENEGOCIACION
                     if (filtro_precio == None or filtro_precio >= maker_material.price_per_kg):
