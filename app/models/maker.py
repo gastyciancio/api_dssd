@@ -50,7 +50,7 @@ class Maker(db.Model):
                                                     'id': maker.id,
                                                     'name': maker.name,
                                                     'materials' : materials,
-                                                    'date_deliver': date_deliver
+                                                    'date_deliver': datetime.strftime(date_deliver,"%d/%m/%Y")
                                                     }
                 lista_makers.append(maker_with_only_materials_asked)
         
