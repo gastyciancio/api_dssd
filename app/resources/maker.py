@@ -18,11 +18,15 @@ def by_data():
     materiales = query.get("materiales")
     filtro_precio = query.get("filtro_precio")
     dias_extra = query.get("dias_extra")
+    date_deliver = query.get("date_deliver")
+    amount_glasses = query.get("amount_glasses")
     if materiales == None:
         return jsonify({'Error': 'Materials required' })
+    if date_deliver == None:
+        return jsonify({'Error': 'Date deliver required' })
 
-    makers = Maker.get_makers_filtered(materiales, filtro_precio, dias_extra)
-    makers = [ maker.json() for maker in makers ]
+    makers = Maker.get_makers_filtered(materiales, date_deliver,amount_glasses, filtro_precio, dias_extra)
+    #makers = [ maker.json2() for maker in makers ]
 
    # Retorno en un arreglo los materiales que no tengan un proveedor asi tenemos registro de los mismos
     materiales_sin_maker = []
