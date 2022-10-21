@@ -7,17 +7,14 @@ class MakerMaterial(db.Model):
     __tablename__ = "maker_material"
     maker_id = Column(ForeignKey("maker.id"), primary_key=True)
     material_id = Column(ForeignKey("material.id"), primary_key=True)
-    max_amount = Column(Integer)
     price_per_kg = Column(Float, nullable=False)
-    days_deliver = Column(Integer)
     material = relationship("Material")
 
     def json(self):
         return {
             'id': self.material.id,
             'name': self.material.name,
-            'price_per_kg': self.price_per_kg,
-            'date_deliver': (date.today() + timedelta(days=self.days_deliver)).strftime("%d/%m/%Y")
+            'price_per_kg': self.price_per_kg
         }
     
     @classmethod

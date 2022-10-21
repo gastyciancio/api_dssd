@@ -9,22 +9,22 @@ class Maker(db.Model):
     __tablename__="maker"
     id = Column(Integer,primary_key=True)
     name = Column(Text, nullable=False)
+    max_amount_glasses = Column(Integer, nullable=False)
+    days_deliver = Column(Integer)
     materials = relationship("MakerMaterial")
-
-    def __init__(self,id=None,name=None,materials=None):
-        self.id=id
-        self.name=name
-        self.materials=materials
     
     @classmethod
     def get_makers(cls):
         return Maker.query.all()
 
     @classmethod
-    def get_makers_filtered(cls, materiales, filtro_precio=None, dias_extra=None):
+    def get_makers_filtered(cls, materiales, fecha_fabricacion_deseada,amount_glasses, filtro_precio=None, dias_extra=None):
         
         lista_makers = []
         nombres_materiales = []
+        fecha_deseada = datetime.strptime(fecha_fabricacion_deseada,"%d/%m/%Y").date()
+        if (dias_extra != None):
+            fecha_deseada = fecha_deseada + timedelta(days=dias_extra)
 
         for material in materiales:
             nombres_materiales.append(material['name'].lower())
@@ -33,26 +33,11 @@ class Maker(db.Model):
         for maker in makers:
 
             lista_materiales = []
+            date_deliver = date.today() + timedelta(days=maker.days_deliver)
             for maker_material in maker.materials:
 
-                date_deliver = date.today() + timedelta(days=maker_material.days_deliver)
-
-                cantidad_material = 999999999
-                fecha_deseada = None
-
-                #BUSCAMOS EN EL LISTADO DE MATERIALES QUE NOS DIO EL CLIENTE EL MATERIAL DEL FABRICANTE
-                for material in materiales:
-                    if (material['name'].lower() == (maker_material.material.name).lower()):
-                        cantidad_material = material['amount']
-                        fecha_deseada = datetime.strptime(material['date_required'],"%d/%m/%Y").date()
-
-                        # AGREGAMOS MAS DIAS DE TOLERANCIA DEL CLIENTE PARA SU MATERIAL SI ESTA EL PARAMETRO OPCIONAL DE LA RENEGOCIACION
-                        if (dias_extra != None):
-                            fecha_deseada = fecha_deseada + timedelta(days=dias_extra)
-                        break
-
                 # NOS FIJAMOS QUE EL MATERIAL ESTE EN EL LISTADO SOLICITADO, QUE LA CANTIDAD PEDIDA SEA MENOR IGUAL AL STOCK ACTUAL DEL MATERIAL Y QUE LA FECHA QUE ENTREGA EL PROVEEDOR SEA MENOR IGUAL A LA QUE EL CLIENTE DESEA
-                if (cantidad_material <= maker_material.max_amount) and (date_deliver <= fecha_deseada):
+                if (amount_glasses <= maker.max_amount_glasses) and (date_deliver <= fecha_deseada):
 
                     # FILTRO POR PRECIO, PARAMETRO OPCIONAL DE LA RENEGOCIACION
                     if (filtro_precio == None or filtro_precio >= maker_material.price_per_kg):
@@ -60,7 +45,13 @@ class Maker(db.Model):
                     
             # SI EXISTE AL MENOS UN MATERIAL SIGINIFICA QUE EL PROVEEDOR ES UTIL PARA LA BUSQUEDA, SE LO AGREGA AL LISTADO DE PROVEEDORES SOLO CON LOS MATERIALES QUE SIRVEN
             if (len(lista_materiales) > 0):
-                maker_with_only_materials_asked = Maker(maker.id, maker.name, lista_materiales)
+                materials = [ material.json() for material in lista_materiales ]
+                maker_with_only_materials_asked = {
+                                                    'id': maker.id,
+                                                    'name': maker.name,
+                                                    'materials' : materials,
+                                                    'date_deliver': datetime.strftime(date_deliver,"%d/%m/%Y")
+                                                    }
                 lista_makers.append(maker_with_only_materials_asked)
         
         return lista_makers
@@ -88,18 +79,15 @@ class Maker(db.Model):
                     })
 
             else:
-                cantidad_pedidos_superan_maximo = 0
-                for material in maker['materials']:
-                    makermaterial_in_bd = MakerMaterial.query.get((maker['id'], material['id']))
-                    if (makermaterial_in_bd.max_amount < material['amount']):
-                        cantidad_pedidos_superan_maximo = cantidad_pedidos_superan_maximo + 1
-                        messages.append(
-                            {
-                                "message":"El pedido del cliente supera la cantidad maxima que acepta el fabricante: " + str(makermaterial_in_bd.max_amount),
-                                "maker_id": maker['id'], 
-                                'material_id':material['id']
-                            })
-                if (cantidad_pedidos_superan_maximo == 0):
+                maker_in_db=Maker.query.get(maker['id'])
+                if (maker['amount_glasses'] > maker_in_db.max_amount_glasses):
+    
+                    messages.append(
+                        {
+                            "message":"El pedido del cliente supera la cantidad maxima que acepta el fabricante: " + str(maker_in_db.max_amount_glasses),
+                            "maker_id": maker['id']
+                        })
+                else:
                     new_reserve = ReserveMaker(maker['id'],maker['date_deliver'])
                     db.session.add(new_reserve)
                     db.session.commit()
