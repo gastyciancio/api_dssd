@@ -30,6 +30,7 @@ class Maker(db.Model):
             nombres_materiales.append(material['name'].lower())
     
         makers = Maker.query.all()
+        reserved_makers = ReserveMaker.get_reserve_makers()
         for maker in makers:
 
             lista_materiales = []
@@ -52,7 +53,13 @@ class Maker(db.Model):
                                                     'materials' : materials,
                                                     'date_deliver': datetime.strftime(date_deliver,"%d/%m/%Y")
                                                     }
-                lista_makers.append(maker_with_only_materials_asked)
+                esta_reservado = False
+                for reserved_maker in reserved_makers:
+                    if (reserved_maker.maker_id ==  maker.id) and (datetime.strptime(reserved_maker.date_reserved,"%d/%m/%Y").date() >= date_deliver,"%d/%m/%Y"):
+                        esta_reservado = True
+                        break
+                if (esta_reservado == False):
+                    lista_makers.append(maker_with_only_materials_asked)
         
         return lista_makers
 
